@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,24 +12,33 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
+
         body {
             background: #1a1a1a;
             color: #e0e0e0;
             padding: 20px;
             line-height: 1.6;
         }
-        h1, h2, h3, h4, h5 {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
             color: #ffffff;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
+
         form {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
+
         input[type="text"] {
             padding: 12px;
             border: 1px solid #444;
@@ -39,11 +49,14 @@
             max-width: 400px;
             transition: border-color 0.3s;
         }
+
         input[type="text"]:focus {
             outline: none;
             border-color: #1e90ff;
         }
-        input[type="submit"] {
+
+        input[type="submit"],
+        button.clear-btn {
             padding: 12px 20px;
             background: #1e90ff;
             color: white;
@@ -52,13 +65,17 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        input[type="submit"]:hover {
+
+        input[type="submit"]:hover,
+        button.clear-btn:hover {
             background: #1478d8;
         }
+
         .results {
             display: grid;
             gap: 20px;
         }
+
         .result-card {
             background: #2a2a2a;
             border-radius: 12px;
@@ -66,22 +83,27 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s, box-shadow 0.3s;
         }
+
         .result-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
+
         .result-card img {
             max-width: 150px;
             border-radius: 8px;
             margin: 10px 0;
         }
+
         .result-card a {
             color: #1e90ff;
             text-decoration: none;
         }
+
         .result-card a:hover {
             text-decoration: underline;
         }
+
         .product-link-btn {
             display: inline-block;
             padding: 8px 16px;
@@ -94,11 +116,13 @@
             font-weight: 500;
             opacity: 1;
         }
+
         .product-link-btn:hover {
             background: #1478d8;
             text-decoration: none;
             opacity: 0.9;
         }
+
         .sidebar {
             width: 0;
             position: fixed;
@@ -112,9 +136,11 @@
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
+
         .sidebar.open {
             width: 350px;
         }
+
         .sidebar .close-btn {
             font-size: 28px;
             color: #e0e0e0;
@@ -123,26 +149,33 @@
             top: 15px;
             right: 15px;
         }
-        .sidebar h3, .sidebar h4 {
+
+        .sidebar h3,
+        .sidebar h4 {
             margin: 10px 20px;
         }
+
         .video-item {
             margin: 20px;
             background: #333;
             padding: 10px;
             border-radius: 8px;
         }
+
         .video-item img {
             max-width: 100%;
             border-radius: 6px;
         }
+
         .video-item a {
             color: #1e90ff;
             text-decoration: none;
         }
+
         .video-item a:hover {
             text-decoration: underline;
         }
+
         .toggle-btn {
             padding: 10px 20px;
             background: #1e90ff;
@@ -153,9 +186,11 @@
             margin-bottom: 20px;
             transition: background 0.3s;
         }
+
         .toggle-btn:hover {
             background: #1478d8;
         }
+
         .gemini-response {
             background: #2a2a2a;
             border-radius: 12px;
@@ -163,13 +198,16 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
+
         .gemini-response ul {
             list-style: none;
             padding: 0;
         }
+
         .gemini-response ul li {
             margin: 5px 0;
         }
+
         .gemini-response button {
             display: block;
             width: 100%;
@@ -182,14 +220,17 @@
             text-align: left;
             transition: background 0.3s, color 0.3s;
         }
+
         .gemini-response button:hover {
             background: #1e90ff;
             color: #ffffff;
         }
+
         .gemini-response p {
             white-space: pre-wrap;
             margin: 10px 0;
         }
+
         .precautions-section {
             background: #2a2a2a;
             border-radius: 12px;
@@ -197,10 +238,12 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
+
         .precautions-section ul {
             list-style: disc;
             padding-left: 20px;
         }
+
         .error-message {
             color: #ff4d4d;
             background: #2a2a2a;
@@ -208,6 +251,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
         .spinner {
             display: none;
             border: 4px solid #1e90ff;
@@ -218,15 +262,33 @@
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         @media (max-width: 768px) {
-            .sidebar.open { width: 100%; }
-            .container { padding: 10px; }
-            form { flex-direction: column; }
-            input[type="text"] { max-width: 100%; }
+            .sidebar.open {
+                width: 100%;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            form {
+                flex-direction: column;
+            }
+
+            input[type="text"] {
+                max-width: 100%;
+            }
         }
     </style>
     <script>
@@ -240,35 +302,36 @@
             document.getElementById(id).classList.toggle('open');
         }
         function searchProduct(product) {
-        document.getElementById("product_name").value = product;
+            document.getElementById("product_name").value = product;
 
-        const form = document.getElementById("product_search_form");
-        const geminiResponses = form.dataset.geminiResponse;
-        const isConsultancy = form.dataset.isConsultancy;
+            const geminiResponses = JSON.parse('{{ gemini_response_list | default([]) | tojson | safe }}');
+            if (geminiResponses.length > 0) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'gemini_response_list';
+                input.value = JSON.stringify(geminiResponses);
+                document.getElementById("product_search_form").appendChild(input);
 
-        if (geminiResponses) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'gemini_response_list';
-            input.value = geminiResponses;
-            form.appendChild(input);
+                const consultancyInput = document.createElement('input');
+                consultancyInput.type = 'hidden';
+                consultancyInput.name = 'is_consultancy';
+                consultancyInput.value = JSON.parse('{{ is_consultancy | default(false) | tojson | safe }}');
+                document.getElementById("product_search_form").appendChild(consultancyInput);
+            }
 
-            const consultancyInput = document.createElement('input');
-            consultancyInput.type = 'hidden';
-            consultancyInput.name = 'is_consultancy';
-            consultancyInput.value = isConsultancy;
-            form.appendChild(consultancyInput);
+            document.getElementById("product_search_form").submit();
         }
-
-        form.submit();
-    }
-
-    function showSpinner() {
-        document.getElementById('spinner').style.display = 'block';
-        document.getElementById('product_search_form').querySelector('input[type="submit"]').disabled = true;
-    }
+        function showSpinner() {
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('product_search_form').querySelector('input[type="submit"]').disabled = true;
+        }
+        function clearResults() {
+            document.getElementById("product_name").value = '';
+            document.getElementById("product_search_form").submit();
+        }
     </script>
 </head>
+
 <body onload="document.getElementById('spinner').style.display='none';">
     <div class="container">
         <h2>Gemini Sohbet</h2>
@@ -280,13 +343,14 @@
         {% if gemini_response_list %}
         <div class="gemini-response">
             <h3>Gemini'den Yanıt</h3>
+            <button class="clear-btn" onclick="clearResults()">Sonuçları Temizle</button>
             <ul>
                 {% for item in gemini_response_list %}
                 <li>
                     {% if item.is_button %}
-                    <button onclick="searchProduct('{{ item.title | e }}')">{{ item.title | e }}</button>
+                    <button onclick="searchProduct('{{ item.title | escape }}')">{{ item.title | escape }}</button>
                     {% else %}
-                    <p>{{ item.title | e }}</p>
+                    <p>{{ item.title | escape }}</p>
                     {% endif %}
                 </li>
                 {% endfor %}
@@ -296,7 +360,7 @@
 
         <h2>Ürün Arama</h2>
         <form id="product_search_form" action="/" method="post" onsubmit="showSpinner()">
-            <input type="text" id="product_name" name="product_name" placeholder="Ürün adı girin..." required>
+            <input type="text" id="product_name" name="product_name" placeholder="Ürün adı girin...">
             <input type="submit" value="Ara">
         </form>
         <div id="spinner" class="spinner"></div>
@@ -306,14 +370,15 @@
         <div class="results">
             {% for result in results %}
             <div class="result-card">
-                <h4>{{ result.site }}</h4>
-                <p><strong>Başlık:</strong> {{ result.title | e }}</p>
+                <h4>{{ result.site | escape }}</h4>
+                <p><strong>Başlık:</strong> {{ result.title | escape }}</p>
                 {% if result.image %}
-                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}" alt="{{ result.title | e }}"></a>
+                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}"
+                        alt="{{ result.title | escape }}"></a>
                 {% endif %}
-                <p><strong>Fiyat:</strong> {{ result.price }}</p>
-                <p><strong>Puan:</strong> {{ result.rating }}</p>
-                <p><strong>Yorum Sayısı:</strong> {{ result.comments }}</p>
+                <p><strong>Fiyat:</strong> {{ result.price | escape }}</p>
+                <p><strong>Puan:</strong> {{ result.rating | escape }}</p>
+                <p><strong>Yorum Sayısı:</strong> {{ result.comments | escape }}</p>
                 <a href="{{ result.link }}" target="_blank" class="product-link-btn">Ürüne Git</a>
             </div>
             {% endfor %}
@@ -321,11 +386,11 @@
         {% endif %}
 
         {% if precautions_text and optimized_category %}
-        <h3>{{ optimized_category | capitalize }} Alırken Dikkat Edilmesi Gerekenler</h3>
+        <h3>{{ optimized_category | capitalize | escape }} Alırken Dikkat Edilmesi Gerekenler</h3>
         <div class="precautions-section">
             <ul>
                 {% for precaution in precautions_text %}
-                <li>{{ precaution | e }}</li>
+                <li>{{ precaution | escape }}</li>
                 {% endfor %}
             </ul>
         </div>
@@ -337,15 +402,15 @@
             <span class="close-btn" onclick="toggleSidebar('youtubeSidebar')">&times;</span>
             <h3>YouTube'da En Çok İzlenen Videolar</h3>
             {% if search_query %}
-            <p><strong>Aranan Kelimeler:</strong> {{ search_query | e }}</p>
+            <p><strong>Aranan Kelimeler:</strong> {{ search_query | escape }}</p>
             {% endif %}
             {% for video_group in youtube_videos %}
-            <h4>{{ video_group.site }} Videolar</h4>
+            <h4>{{ video_group.site | escape }} Videolar</h4>
             {% for video in video_group.videos %}
             <div class="video-item">
-                <img src="{{ video.thumbnail }}" alt="{{ video.title | e }}">
-                <p><a href="{{ video.url }}" target="_blank">{{ video.title | e }}</a></p>
-                <p>İzlenme: {{ video.views }}</p>
+                <img src="{{ video.thumbnail }}" alt="{{ video.title | escape }}">
+                <p><a href="{{ video.url }}" target="_blank">{{ video.title | escape }}</a></p>
+                <p>İzlenme: {{ video.views | escape }}</p>
             </div>
             {% endfor %}
             {% endfor %}
@@ -353,29 +418,31 @@
         {% endif %}
 
         {% if precautions_videos %}
-        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını Göster</button>
+        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını
+            Göster</button>
         <div id="precautionsSidebar" class="sidebar">
             <span class="close-btn" onclick="toggleSidebar('precautionsSidebar')">&times;</span>
             <h3>Dikkat Edilmesi Gerekenler Videoları</h3>
             {% if precautions_search_query %}
-            <p><strong>Aranan Kelimeler:</strong> {{ precautions_search_query | e }}</p>
+            <p><strong>Aranan Kelimeler:</strong> {{ precautions_search_query | escape }}</p>
             {% endif %}
             {% for video_group in precautions_videos %}
-            <h4>{{ video_group.site }} Videolar</h4>
+            <h4>{{ video_group.site | escape }} Videolar</h4>
             {% for video in video_group.videos %}
             <div class="video-item">
-                <img src="{{ video.thumbnail }}" alt="{{ video.title | e }}">
-                <p><a href="{{ video.url }}" target="_blank">{{ video.title | e }}</a></p>
-                <p>İzlenme: {{ video.views }}</p>
+                <img src="{{ video.thumbnail }}" alt="{{ video.title | escape }}">
+                <p><a href="{{ video.url }}" target="_blank">{{ video.title | escape }}</a></p>
+                <p>İzlenme: {{ video.views | escape }}</p>
             </div>
             {% endfor %}
             {% endfor %}
         </div>
-        {% else %}
+        {% elif search_query %}
         <div class="error-message">
             <p>Bu ürün için dikkat edilmesi gerekenler videosu bulunamadı.</p>
         </div>
         {% endif %}
     </div>
 </body>
+
 </html>

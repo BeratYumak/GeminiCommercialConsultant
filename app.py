@@ -25,8 +25,8 @@ def optimize_title_with_gemini(title):
         genai.configure(api_key=GENAI_API_KEY)
         model = genai.GenerativeModel(model_name="gemini-2.5-pro")
         prompt = (
-            f"Verilen ürün başlığını YouTube'da aranabilir."
-            f"Kategori 2-3 kelimeyi geçmesin, çok genel (örneğin, sadece 'Tablo') olmamalı."
+            f"Verilen ürün başlığını YouTube'da aranabilir. "
+            f"Kategori 2-3 kelimeyi geçmesin, çok genel (örneğin, sadece 'Tablo') olmamalı. "
             f"Sadece kategori adını döndür, başka açıklama ekleme.\n"
             f"Başlık: {title}"
         )
@@ -39,18 +39,21 @@ def optimize_title_with_gemini(title):
         return title
 
 def clean_response(text):
-    """HTML etiketlerini kaldır ve encode edilmiş karakterleri çöz."""
+    """HTML etiketlerini kaldır, encode edilmiş karakterleri çöz ve liste işaretlerini temizle."""
     cleaned_text = html.unescape(text)
     cleaned_text = bleach.clean(cleaned_text, tags=[], strip=True)
-    return cleaned_text.strip()
+    # Liste işaretlerini (*, -, •) ve numaraları (1., 2., vb.) kaldır
+    lines = cleaned_text.split('\n')
+    cleaned_lines = [line.strip().lstrip('*-•1234567890. ').strip() for line in lines if line.strip()]
+    return '\n'.join(cleaned_lines)
 
 def research_precautions_with_gemini(category):
     try:
         genai.configure(api_key=GENAI_API_KEY)
         model = genai.GenerativeModel(model_name="gemini-2.5-pro")
         prompt = (
-            f"{category} alınırken dikkat edilmesi gerekenler hakkında araştırma yap."
-            "Cevabı 3-5 madde, her madde en fazla 15 kelime olacak şekilde kısa ve net bir liste yap."
+            f"{category} alınırken dikkat edilmesi gerekenler hakkında araştırma yap. "
+            "Cevabı 3-5 madde, her madde en fazla 15 kelime olacak şekilde kısa ve net bir liste yap. "
             "Sadece madde liste döndür, başka hiçbir şey ekleme."
         )
         response = model.generate_content(prompt)
@@ -75,17 +78,23 @@ def performance_log(func):
 def home():
     results = []
     youtube_videos = []
-    precautions_videos = []  # Dikkat Edilmesi Gerekenler videoları için
+    precautions_videos = []
     precautions_text = []
     optimized_category = ""
-    search_query = ""  # Genel YouTube araması için kelimeler
-    precautions_search_query = ""  # Dikkat Edilmesi Gerekenler araması için kelimeler
-    gemini_response_list = None
+    search_query = ""
+    precautions_search_query = ""
+    gemini_response_list = []
 
     # Gemini yanıtlarını formdan al ve JSON olarak işle
     if request.form.get('gemini_response_list'):
         try:
             gemini_response_list = json.loads(request.form.get('gemini_response_list'))
+            for item in gemini_response_list:
+                if 'title' in item:
+                    item['title'] = str(item['title'])
+                else:
+                    item['title'] = "Hata: Başlık bulunamadı"
+                    item['is_button'] = False
         except json.JSONDecodeError as e:
             logger.error(f"Gemini yanıtları JSON parse hatası: {str(e)}")
             gemini_response_list = [{"title": "Hata: Gemini yanıtları yüklenemedi", "is_button": False}]
@@ -96,48 +105,41 @@ def home():
         product_name = request.form.get('product_name')
         logger.info(f"Ürün araması: {product_name}")
         if product_name:
+            search_query = product_name
             with ThreadPoolExecutor(max_workers=5) as executor:
                 future_heps = executor.submit(scrape_hepsiburada, product_name)
                 future_trendyol = executor.submit(scrape_trendyol, product_name)
                 results = [future_heps.result(), future_trendyol.result()]
 
-            # İlk geçerli başlığı kullanarak kategori belirle
             for result in results:
-                if result["title"] and result["title"] not in ["hata", "Bulunamadı"]:
+                if result["title"] and result["title"] not in ["hata", "Bulunamadı", "Hata"]:
                     optimized_category = optimize_title_with_gemini(result["title"])
                     logger.info(f"YouTube ve Gemini için kategori: {optimized_category}")
                     break
 
-            # Genel YouTube araması
-            search_query = product_name
-            logger.info(f"YouTube araması için sorgu: {search_query}")
-            videos = scrape_youtube(search_query, YOUTUBE_API_KEY, max_results=3)
-            if videos and videos[0]["title"] != "hata":
-                youtube_videos.append({"site": "Genel", "videos": videos})
-                logger.info(f"YouTube: '{search_query}' için {len(videos)} video bulundu")
-            else:
-                logger.warning(f"YouTube: '{search_query}' için video bulunamadı, optimize edilmiş kategori deneniyor")
-                if optimized_category:
-                    videos = scrape_youtube(optimized_category, YOUTUBE_API_KEY, max_results=3)
-                    if videos and videos[0]["title"] != "hata":
-                        youtube_videos.append({"site": "Genel", "videos": videos})
-                        logger.info(f"YouTube: '{optimized_category}' için {len(videos)} video bulundu")
-                    else:
-                        logger.warning(f"YouTube: '{optimized_category}' için de video bulunamadı")
-
-            # Dikkat Edilmesi Gerekenler YouTube araması
             if optimized_category:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    future_youtube = executor.submit(scrape_youtube, search_query, YOUTUBE_API_KEY, max_results=3)
+                    future_precautions = executor.submit(scrape_youtube, f"{optimized_category} alınırken dikkat edilmesi gerekenler", YOUTUBE_API_KEY, max_results=3)
+                    videos = future_youtube.result()
+                    precautions_vids = future_precautions.result()
+
+                if videos and videos[0]["title"] != "Hata":
+                    youtube_videos.append({"site": "Genel", "videos": videos})
+                    logger.info(f"YouTube: '{search_query}' için {len(videos)} video bulundu")
+                else:
+                    logger.warning(f"YouTube: '{search_query}' için video bulunamadı")
+
                 precautions_search_query = f"{optimized_category} alınırken dikkat edilmesi gerekenler"
-                logger.info(f"YouTube dikkat edilmesi gerekenler araması için sorgu: {precautions_search_query}")
-                precautions_vids = scrape_youtube(precautions_search_query, YOUTUBE_API_KEY, max_results=3)
-                if precautions_vids and precautions_vids[0]["title"] != "hata":
+                if precautions_vids and precautions_vids[0]["title"] != "Hata":
                     precautions_videos.append({"site": "Genel", "videos": precautions_vids})
                     logger.info(f"YouTube: '{precautions_search_query}' için {len(precautions_vids)} video bulundu")
                 else:
                     logger.warning(f"YouTube: '{precautions_search_query}' için video bulunamadı")
+
                 precautions_text = research_precautions_with_gemini(optimized_category)
             else:
-                logger.warning("Gemini önerileri ve dikkat edilmesi gerekenler videoları atlandı: Geçerli başlık bulunamadı")
+                logger.warning("YouTube ve Gemini aramaları atlandı: Geçerli başlık bulunamadı")
 
     return render_template('index.html',
         results=results,
@@ -172,7 +174,7 @@ def gemini_chat():
             )
             response = chat.send_message(full_prompt)
             raw_text = clean_response(response.text)
-            cevaplar = [{"title": line.strip("-•1234567890. "), "is_button": True} for line in raw_text.split("\n") if line.strip()]
+            cevaplar = [{"title": str(line), "is_button": True} for line in raw_text.split("\n") if line.strip()]
             with open("gemini_cevaplar.txt", "a", encoding="utf-8") as f:
                 f.write(f"Soru: {prompt}\nCevaplar:\n")
                 for c in cevaplar:
@@ -198,7 +200,7 @@ def gemini_chat():
             )
             response = chat.send_message(full_prompt)
             raw_text = clean_response(response.text)
-            cevaplar = [{"title": raw_text, "is_button": False}]
+            cevaplar = [{"title": str(raw_text), "is_button": False}]
             logger.info(f"Gemini cevabı alındı (düz metin): {raw_text[:100]}...")
             with open("gemini_cevaplar.txt", "a", encoding="utf-8") as f:
                 f.write(f"Soru: {prompt}\nCevap: {raw_text}\n\n")
