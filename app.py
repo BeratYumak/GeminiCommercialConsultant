@@ -11,6 +11,7 @@ import html
 import bleach
 import logging
 import json
+import re
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -42,7 +43,6 @@ def clean_response(text):
     """HTML etiketlerini kaldır, encode edilmiş karakterleri çöz ve liste işaretlerini temizle."""
     cleaned_text = html.unescape(text)
     cleaned_text = bleach.clean(cleaned_text, tags=[], strip=True)
-    # Liste işaretlerini (*, -, •) ve numaraları (1., 2., vb.) kaldır
     lines = cleaned_text.split('\n')
     cleaned_lines = [line.strip().lstrip('*-•1234567890. ').strip() for line in lines if line.strip()]
     return '\n'.join(cleaned_lines)
@@ -59,7 +59,7 @@ def research_precautions_with_gemini(category):
         response = model.generate_content(prompt)
         cleaned_text = clean_response(response.text)
         logger.info(f"Gemini: '{category}' için dikkat edilmesi gerekenler araştırıldı")
-        return cleaned_text.split('\n')  # Liste formatı için satırlara böl
+        return cleaned_text.split('\n')
     except Exception as e:
         logger.error(f"Gemini araştırma hatası: {str(e)}")
         return [f"hata: {str(e)}"]
@@ -85,7 +85,6 @@ def home():
     precautions_search_query = ""
     gemini_response_list = []
 
-    # Gemini yanıtlarını formdan al ve JSON olarak işle
     if request.form.get('gemini_response_list'):
         try:
             gemini_response_list = json.loads(request.form.get('gemini_response_list'))
@@ -170,11 +169,19 @@ def gemini_chat():
                 "Lütfen cevabını kısa tut ve sadece sana sorulan şeye liste şeklinde cevap ver. "
                 "Cevaplarının sonuna ürünün ne olduğunu ekle mesela tablo ise cevabın sonuna tablo ekle. "
                 "Aralara duygusal veya görünüşleriyle ilgili yorum katma, sadece ne olduğunu söyle. "
-                "Cevabının başına veya sonuna 'elbette' veya 'rica ederim' gibi bitirme sözleri ekleme."
+                "Cevabının başına veya sonuna 'elbette' veya 'rica ederım' gibi bitirme sözleri ekleme."
             )
             response = chat.send_message(full_prompt)
             raw_text = clean_response(response.text)
-            cevaplar = [{"title": str(line), "is_button": True} for line in raw_text.split("\n") if line.strip()]
+            # Ürün kategorisini kaldır (son kelimeyi temizle)
+            cevaplar = []
+            for line in raw_text.split("\n"):
+                if line.strip():
+                    # Son kelimeyi kaldır (kategori genellikle son kelime)
+                    words = line.strip().split()
+                    if words:
+                        cleaned_line = " ".join(words[:-1]) if len(words) > 1 else line
+                        cevaplar.append({"title": str(cleaned_line), "is_button": True})
             with open("gemini_cevaplar.txt", "a", encoding="utf-8") as f:
                 f.write(f"Soru: {prompt}\nCevaplar:\n")
                 for c in cevaplar:

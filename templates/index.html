@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,70 +11,58 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
-
         body {
             background: #1a1a1a;
             color: #e0e0e0;
             padding: 20px;
             line-height: 1.6;
         }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5 {
+        h1, h2, h3, h4, h5 {
             color: #ffffff;
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-
         form {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
-
         input[type="text"] {
             padding: 12px;
-            border: 1px solid #444;
+            border: 2px solid #444;
             border-radius: 8px;
             background: #2a2a2a;
             color: #e0e0e0;
             width: 100%;
-            max-width: 400px;
-            transition: border-color 0.3s;
+            max-width: 300px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
         input[type="text"]:focus {
             outline: none;
             border-color: #1e90ff;
+            max-width: 400px;
+            box-shadow: 0 0 8px rgba(30, 144, 255, 0.5);
         }
-
-        input[type="submit"],
-        button.clear-btn {
+        input[type="submit"] {
             padding: 12px 20px;
             background: #1e90ff;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
-
-        input[type="submit"]:hover,
-        button.clear-btn:hover {
+        input[type="submit"]:hover {
             background: #1478d8;
+            transform: scale(1.05);
         }
-
         .results {
             display: grid;
             gap: 20px;
         }
-
         .result-card {
             background: #2a2a2a;
             border-radius: 12px;
@@ -83,27 +70,22 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s, box-shadow 0.3s;
         }
-
         .result-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
-
         .result-card img {
             max-width: 150px;
             border-radius: 8px;
             margin: 10px 0;
         }
-
         .result-card a {
             color: #1e90ff;
             text-decoration: none;
         }
-
         .result-card a:hover {
             text-decoration: underline;
         }
-
         .product-link-btn {
             display: inline-block;
             padding: 8px 16px;
@@ -116,13 +98,11 @@
             font-weight: 500;
             opacity: 1;
         }
-
         .product-link-btn:hover {
             background: #1478d8;
             text-decoration: none;
             opacity: 0.9;
         }
-
         .sidebar {
             width: 0;
             position: fixed;
@@ -136,11 +116,9 @@
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
-
         .sidebar.open {
             width: 350px;
         }
-
         .sidebar .close-btn {
             font-size: 28px;
             color: #e0e0e0;
@@ -149,33 +127,26 @@
             top: 15px;
             right: 15px;
         }
-
-        .sidebar h3,
-        .sidebar h4 {
+        .sidebar h3, .sidebar h4 {
             margin: 10px 20px;
         }
-
         .video-item {
             margin: 20px;
             background: #333;
             padding: 10px;
             border-radius: 8px;
         }
-
         .video-item img {
             max-width: 100%;
             border-radius: 6px;
         }
-
         .video-item a {
             color: #1e90ff;
             text-decoration: none;
         }
-
         .video-item a:hover {
             text-decoration: underline;
         }
-
         .toggle-btn {
             padding: 10px 20px;
             background: #1e90ff;
@@ -184,30 +155,30 @@
             border-radius: 8px;
             cursor: pointer;
             margin-bottom: 20px;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
-
         .toggle-btn:hover {
             background: #1478d8;
+            transform: scale(1.05);
         }
-
         .gemini-response {
             background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
-
         .gemini-response ul {
             list-style: none;
             padding: 0;
+            flex-grow: 1;
         }
-
         .gemini-response ul li {
             margin: 5px 0;
         }
-
         .gemini-response button {
             display: block;
             width: 100%;
@@ -218,19 +189,29 @@
             border-radius: 6px;
             cursor: pointer;
             text-align: left;
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.3s, color 0.3s, transform 0.2s;
         }
-
         .gemini-response button:hover {
             background: #1e90ff;
             color: #ffffff;
+            transform: scale(1.02);
         }
-
+        .gemini-response .clear-btn {
+            align-self: flex-end;
+            width: auto;
+            padding: 8px 16px;
+            margin-top: 10px;
+            background: #ff4d4d;
+            border: none;
+        }
+        .gemini-response .clear-btn:hover {
+            background: #d43f3f;
+            transform: scale(1.05);
+        }
         .gemini-response p {
             white-space: pre-wrap;
             margin: 10px 0;
         }
-
         .precautions-section {
             background: #2a2a2a;
             border-radius: 12px;
@@ -238,12 +219,10 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
-
         .precautions-section ul {
             list-style: disc;
             padding-left: 20px;
         }
-
         .error-message {
             color: #ff4d4d;
             background: #2a2a2a;
@@ -251,7 +230,6 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
-
         .spinner {
             display: none;
             border: 4px solid #1e90ff;
@@ -262,33 +240,17 @@
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
-
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
         @media (max-width: 768px) {
-            .sidebar.open {
-                width: 100%;
-            }
-
-            .container {
-                padding: 10px;
-            }
-
-            form {
-                flex-direction: column;
-            }
-
-            input[type="text"] {
-                max-width: 100%;
-            }
+            .sidebar.open { width: 100%; }
+            .container { padding: 10px; }
+            form { flex-direction: column; }
+            input[type="text"] { max-width: 100%; }
+            input[type="text"]:focus { max-width: 100%; }
+            .gemini-response .clear-btn { align-self: center; }
         }
     </style>
     <script>
@@ -301,9 +263,11 @@
             });
             document.getElementById(id).classList.toggle('open');
         }
+    
         function searchProduct(product) {
+            showSpinner(); // Spinner'ı göster
             document.getElementById("product_name").value = product;
-
+    
             const geminiResponses = JSON.parse('{{ gemini_response_list | default([]) | tojson | safe }}');
             if (geminiResponses.length > 0) {
                 const input = document.createElement('input');
@@ -311,39 +275,41 @@
                 input.name = 'gemini_response_list';
                 input.value = JSON.stringify(geminiResponses);
                 document.getElementById("product_search_form").appendChild(input);
-
+    
                 const consultancyInput = document.createElement('input');
                 consultancyInput.type = 'hidden';
                 consultancyInput.name = 'is_consultancy';
                 consultancyInput.value = JSON.parse('{{ is_consultancy | default(false) | tojson | safe }}');
                 document.getElementById("product_search_form").appendChild(consultancyInput);
             }
-
+    
             document.getElementById("product_search_form").submit();
         }
+    
         function showSpinner() {
             document.getElementById('spinner').style.display = 'block';
-            document.getElementById('product_search_form').querySelector('input[type="submit"]').disabled = true;
+            document.querySelectorAll('input[type="submit"]').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.gemini-response button:not(.clear-btn)').forEach(btn => btn.disabled = true);
         }
+    
         function clearResults() {
             document.getElementById("product_name").value = '';
             document.getElementById("product_search_form").submit();
         }
     </script>
+    
 </head>
-
 <body onload="document.getElementById('spinner').style.display='none';">
     <div class="container">
         <h2>Gemini Sohbet</h2>
-        <form action="/gemini-chat" method="post">
+        <form action="/gemini-chat" method="post" onsubmit="showSpinner()">
             <input type="text" name="chat_prompt" placeholder="Gemini ile sohbet et..." required>
-            <input type="submit" value="Gönder">
+            <input type="submit" value="Ara">
         </form>
 
         {% if gemini_response_list %}
         <div class="gemini-response">
             <h3>Gemini'den Yanıt</h3>
-            <button class="clear-btn" onclick="clearResults()">Sonuçları Temizle</button>
             <ul>
                 {% for item in gemini_response_list %}
                 <li>
@@ -355,6 +321,7 @@
                 </li>
                 {% endfor %}
             </ul>
+            <button class="clear-btn" onclick="clearResults()">Sonuçları Temizle</button>
         </div>
         {% endif %}
 
@@ -373,8 +340,7 @@
                 <h4>{{ result.site | escape }}</h4>
                 <p><strong>Başlık:</strong> {{ result.title | escape }}</p>
                 {% if result.image %}
-                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}"
-                        alt="{{ result.title | escape }}"></a>
+                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}" alt="{{ result.title | escape }}"></a>
                 {% endif %}
                 <p><strong>Fiyat:</strong> {{ result.price | escape }}</p>
                 <p><strong>Puan:</strong> {{ result.rating | escape }}</p>
@@ -418,8 +384,7 @@
         {% endif %}
 
         {% if precautions_videos %}
-        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını
-            Göster</button>
+        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını Göster</button>
         <div id="precautionsSidebar" class="sidebar">
             <span class="close-btn" onclick="toggleSidebar('precautionsSidebar')">&times;</span>
             <h3>Dikkat Edilmesi Gerekenler Videoları</h3>
@@ -444,5 +409,4 @@
         {% endif %}
     </div>
 </body>
-
 </html>
