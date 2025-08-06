@@ -39,7 +39,7 @@ Projenizi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyi
 1. **Depoyu Klonlayın**:
    ```bash
    git clone https://github.com/BeratYumak/GeminiCommercialConsultant.git
-   cd GeminiCommercialConsultant
+   cd GeminiCommercialConsultant-master
 2. Sanal Ortam Oluşturun:
    python -m venv venv
    source venv/bin/activate  # Linux/Mac
