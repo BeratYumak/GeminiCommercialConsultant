@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ürün Arama</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -11,25 +13,36 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
+
         body {
             background: #1a1a1a;
             color: #e0e0e0;
             padding: 20px;
             line-height: 1.6;
         }
-        h1, h2, h3, h4, h5 {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
             color: #ffffff;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
+
         form {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            align-items: center;
         }
-        input[type="text"] {
+
+        input[type="text"],
+        input[type="file"] {
             padding: 12px;
             border: 2px solid #444;
             border-radius: 8px;
@@ -40,12 +53,15 @@
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        input[type="text"]:focus {
+
+        input[type="text"]:focus,
+        input[type="file"]:focus {
             outline: none;
             border-color: #1e90ff;
             max-width: 400px;
             box-shadow: 0 0 8px rgba(30, 144, 255, 0.5);
         }
+
         input[type="submit"] {
             padding: 12px 20px;
             background: #1e90ff;
@@ -55,37 +71,88 @@
             cursor: pointer;
             transition: background 0.3s, transform 0.2s;
         }
+
         input[type="submit"]:hover {
             background: #1478d8;
             transform: scale(1.05);
         }
-        .results {
-            display: grid;
-            gap: 20px;
+
+        .mic-btn,
+        .image-btn,
+        .play-btn {
+            padding: 12px;
+            background: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            font-size: 18px;
         }
+
+        .mic-btn.recording {
+            background: #ff4d4d;
+        }
+
+        .mic-btn:hover,
+        .image-btn:hover,
+        .play-btn:hover {
+            background: #1478d8;
+            transform: scale(1.05);
+        }
+
+        .mic-btn.recording:hover {
+            background: #d43f3f;
+        }
+
+        .trendyol-results {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hepsiburada-result {
+            margin-top: 20px;
+        }
+
         .result-card {
             background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s, box-shadow 0.3s;
+            flex: 0 0 250px;
+            min-width: 250px;
         }
+
+        .hepsiburada-result .result-card {
+            flex: 0 0 100%;
+            min-width: 100%;
+        }
+
         .result-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
+
         .result-card img {
             max-width: 150px;
             border-radius: 8px;
             margin: 10px 0;
         }
+
         .result-card a {
             color: #1e90ff;
             text-decoration: none;
         }
+
         .result-card a:hover {
             text-decoration: underline;
         }
+
         .product-link-btn {
             display: inline-block;
             padding: 8px 16px;
@@ -98,11 +165,13 @@
             font-weight: 500;
             opacity: 1;
         }
+
         .product-link-btn:hover {
             background: #1478d8;
             text-decoration: none;
             opacity: 0.9;
         }
+
         .sidebar {
             width: 0;
             position: fixed;
@@ -116,9 +185,11 @@
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
+
         .sidebar.open {
             width: 350px;
         }
+
         .sidebar .close-btn {
             font-size: 28px;
             color: #e0e0e0;
@@ -127,26 +198,33 @@
             top: 15px;
             right: 15px;
         }
-        .sidebar h3, .sidebar h4 {
+
+        .sidebar h3,
+        .sidebar h4 {
             margin: 10px 20px;
         }
+
         .video-item {
             margin: 20px;
             background: #333;
             padding: 10px;
             border-radius: 8px;
         }
+
         .video-item img {
             max-width: 100%;
             border-radius: 6px;
         }
+
         .video-item a {
             color: #1e90ff;
             text-decoration: none;
         }
+
         .video-item a:hover {
             text-decoration: underline;
         }
+
         .toggle-btn {
             padding: 10px 20px;
             background: #1e90ff;
@@ -157,11 +235,14 @@
             margin-bottom: 20px;
             transition: background 0.3s, transform 0.2s;
         }
+
         .toggle-btn:hover {
             background: #1478d8;
             transform: scale(1.05);
         }
-        .gemini-response {
+
+        .gemini-response,
+        .precautions-section {
             background: #2a2a2a;
             border-radius: 12px;
             padding: 20px;
@@ -171,14 +252,22 @@
             display: flex;
             flex-direction: column;
         }
-        .gemini-response ul {
+
+        .gemini-response ul,
+        .precautions-section ul {
             list-style: none;
             padding: 0;
             flex-grow: 1;
         }
-        .gemini-response ul li {
+
+        .gemini-response ul li,
+        .precautions-section ul li {
             margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
         .gemini-response button {
             display: block;
             width: 100%;
@@ -191,12 +280,15 @@
             text-align: left;
             transition: background 0.3s, color 0.3s, transform 0.2s;
         }
+
         .gemini-response button:hover {
             background: #1e90ff;
             color: #ffffff;
             transform: scale(1.02);
         }
-        .gemini-response .clear-btn {
+
+        .gemini-response .clear-btn,
+        .play-btn {
             align-self: flex-end;
             width: auto;
             padding: 8px 16px;
@@ -204,25 +296,23 @@
             background: #ff4d4d;
             border: none;
         }
-        .gemini-response .clear-btn:hover {
+
+        .gemini-response .clear-btn:hover,
+        .play-btn:hover {
             background: #d43f3f;
             transform: scale(1.05);
         }
+
         .gemini-response p {
             white-space: pre-wrap;
             margin: 10px 0;
         }
-        .precautions-section {
-            background: #2a2a2a;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
+
         .precautions-section ul {
             list-style: disc;
             padding-left: 20px;
         }
+
         .error-message {
             color: #ff4d4d;
             background: #2a2a2a;
@@ -230,6 +320,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
         .spinner {
             display: none;
             border: 4px solid #1e90ff;
@@ -240,17 +331,67 @@
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
+        .audio-player {
+            margin-top: 10px;
+        }
+
         @media (max-width: 768px) {
-            .sidebar.open { width: 100%; }
-            .container { padding: 10px; }
-            form { flex-direction: column; }
-            input[type="text"] { max-width: 100%; }
-            input[type="text"]:focus { max-width: 100%; }
-            .gemini-response .clear-btn { align-self: center; }
+            .sidebar.open {
+                width: 100%;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            form {
+                flex-direction: column;
+            }
+
+            input[type="text"],
+            input[type="file"] {
+                max-width: 100%;
+            }
+
+            input[type="text"]:focus,
+            input[type="file"]:focus {
+                max-width: 100%;
+            }
+
+            .gemini-response .clear-btn,
+            .play-btn {
+                align-self: center;
+            }
+
+            .mic-btn,
+            .image-btn {
+                width: 50px;
+            }
+
+            .trendyol-results {
+                flex-wrap: wrap;
+            }
+
+            .result-card {
+                flex: 0 0 100%;
+                min-width: 100%;
+            }
+
+            .hepsiburada-result .result-card {
+                flex: 0 0 100%;
+                min-width: 100%;
+            }
         }
     </style>
     <script>
@@ -263,11 +404,10 @@
             });
             document.getElementById(id).classList.toggle('open');
         }
-    
+
         function searchProduct(product) {
-            showSpinner(); // Spinner'ı göster
+            showSpinner();
             document.getElementById("product_name").value = product;
-    
             const geminiResponses = JSON.parse('{{ gemini_response_list | default([]) | tojson | safe }}');
             if (geminiResponses.length > 0) {
                 const input = document.createElement('input');
@@ -275,36 +415,138 @@
                 input.name = 'gemini_response_list';
                 input.value = JSON.stringify(geminiResponses);
                 document.getElementById("product_search_form").appendChild(input);
-    
                 const consultancyInput = document.createElement('input');
                 consultancyInput.type = 'hidden';
                 consultancyInput.name = 'is_consultancy';
                 consultancyInput.value = JSON.parse('{{ is_consultancy | default(false) | tojson | safe }}');
                 document.getElementById("product_search_form").appendChild(consultancyInput);
             }
-    
             document.getElementById("product_search_form").submit();
         }
-    
+
         function showSpinner() {
             document.getElementById('spinner').style.display = 'block';
             document.querySelectorAll('input[type="submit"]').forEach(btn => btn.disabled = true);
-            document.querySelectorAll('.gemini-response button:not(.clear-btn)').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.gemini-response button:not(.clear-btn, .play-btn)').forEach(btn => btn.disabled = true);
+            document.querySelectorAll('.mic-btn, .image-btn, .play-btn').forEach(btn => btn.disabled = true);
         }
-    
+
+        function hideSpinner() {
+            document.getElementById('spinner').style.display = 'none';
+            document.querySelectorAll('input[type="submit"]').forEach(btn => btn.disabled = false);
+            document.querySelectorAll('.gemini-response button:not(.clear-btn, .play-btn)').forEach(btn => btn.disabled = false);
+            document.querySelectorAll('.mic-btn, .image-btn, .play-btn').forEach(btn => btn.disabled = false);
+        }
+
         function clearResults() {
             document.getElementById("product_name").value = '';
             document.getElementById("product_search_form").submit();
         }
+
+        async function startRecording() {
+            try {
+                showSpinner();
+                document.querySelector('.mic-btn').classList.add('recording');
+                const response = await fetch('/start-audio', { method: 'POST' });
+                if (response.ok) {
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                    hideSpinner();
+                    document.querySelector('.mic-btn').classList.remove('recording');
+                } else {
+                    const result = await response.json();
+                    console.error('Ses kaydı hatası:', result.error);
+                    alert(result.error);
+                    hideSpinner();
+                    document.querySelector('.mic-btn').classList.remove('recording');
+                }
+            } catch (error) {
+                console.error('Fetch hatası:', error);
+                alert('Ses kaydı başlatılırken hata oluştu: ' + error.message);
+                hideSpinner();
+                document.querySelector('.mic-btn').classList.remove('recording');
+            }
+        }
+
+        async function startImageSearch() {
+            try {
+                showSpinner();
+                const formData = new FormData(document.getElementById("image_search_form"));
+                const response = await fetch('/image-search', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response.ok) {
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                    hideSpinner();
+                } else {
+                    const result = await response.json();
+                    console.error('Görsel arama hatası:', result.error);
+                    alert(result.error);
+                    hideSpinner();
+                }
+            } catch (error) {
+                console.error('Fetch hatası:', error);
+                alert('Görsel arama başarısız: ' + error.message);
+                hideSpinner();
+            }
+        }
+
+        async function playOutputs() {
+            try {
+                showSpinner();
+                const geminiResponses = JSON.parse('{{ gemini_response_list | default([]) | tojson | safe }}');
+                const precautionsText = `{{ precautions_text | map(attribute='text') | join('') | escape }}`;
+
+                const formData = new FormData();
+                formData.append('gemini_response_list', JSON.stringify(geminiResponses));
+                formData.append('precautions_text', precautionsText);
+
+                const response = await fetch('/play-outputs', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const audioPlayer = document.getElementById('audio-player');
+                    audioPlayer.src = '/static/audio/output.mp3?' + new Date().getTime();
+                    audioPlayer.style.display = 'block';
+                    audioPlayer.play();
+                    hideSpinner();
+                } else {
+                    const result = await response.json();
+                    console.error('Ses oynatma hatası:', result.error);
+                    alert(result.error);
+                    hideSpinner();
+                }
+            } catch (error) {
+                console.error('Fetch hatası:', error);
+                alert('Ses oynatma başarısız: ' + error.message);
+                hideSpinner();
+            }
+        }
     </script>
-    
 </head>
+
 <body onload="document.getElementById('spinner').style.display='none';">
     <div class="container">
         <h2>Gemini Sohbet</h2>
         <form action="/gemini-chat" method="post" onsubmit="showSpinner()">
-            <input type="text" name="chat_prompt" placeholder="Gemini ile sohbet et..." required>
+            <input type="text" name="chat_prompt" id="chat_prompt" placeholder="Gemini ile sohbet et..."
+                value="{{ chat_prompt | escape }}" required>
+            <button type="button" class="mic-btn" onclick="startRecording()"><i class="fas fa-microphone"></i></button>
             <input type="submit" value="Ara">
+        </form>
+
+        <h2>Görsel ile Ürün Arama</h2>
+        <form id="image_search_form" enctype="multipart/form-data">
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <button type="button" class="image-btn" onclick="startImageSearch()"><i class="fas fa-image"></i></button>
         </form>
 
         {% if gemini_response_list %}
@@ -322,6 +564,10 @@
                 {% endfor %}
             </ul>
             <button class="clear-btn" onclick="clearResults()">Sonuçları Temizle</button>
+            {% if gemini_response_list | selectattr('is_button') | list | length > 0 or precautions_text %}
+            <button class="play-btn" onclick="playOutputs()">Çıktıları Seslendir</button>
+            {% endif %}
+            <audio id="audio-player" class="audio-player" controls style="display: none;"></audio>
         </div>
         {% endif %}
 
@@ -334,13 +580,32 @@
 
         {% if results %}
         <h3>Sonuçlar</h3>
-        <div class="results">
-            {% for result in results %}
+        <h4>Trendyol</h4>
+        <div class="trendyol-results">
+            {% for result in results if result.site == 'Trendyol' %}
             <div class="result-card">
-                <h4>{{ result.site | escape }}</h4>
+                <h5>{{ result.site | escape }}</h5>
                 <p><strong>Başlık:</strong> {{ result.title | escape }}</p>
                 {% if result.image %}
-                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}" alt="{{ result.title | escape }}"></a>
+                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}"
+                        alt="{{ result.title | escape }}"></a>
+                {% endif %}
+                <p><strong>Fiyat:</strong> {{ result.price | escape }}</p>
+                <p><strong>Puan:</strong> {{ result.rating | escape }}</p>
+                <p><strong>Yorum Sayısı:</strong> {{ result.comments | escape }}</p>
+                <a href="{{ result.link }}" target="_blank" class="product-link-btn">Ürüne Git</a>
+            </div>
+            {% endfor %}
+        </div>
+        <h4>Hepsiburada</h4>
+        <div class="hepsiburada-result">
+            {% for result in results if result.site == 'Hepsiburada' %}
+            <div class="result-card">
+                <h5>{{ result.site | escape }}</h5>
+                <p><strong>Başlık:</strong> {{ result.title | escape }}</p>
+                {% if result.image %}
+                <a href="{{ result.link }}" target="_blank"><img src="{{ result.image }}"
+                        alt="{{ result.title | escape }}"></a>
                 {% endif %}
                 <p><strong>Fiyat:</strong> {{ result.price | escape }}</p>
                 <p><strong>Puan:</strong> {{ result.rating | escape }}</p>
@@ -351,14 +616,22 @@
         </div>
         {% endif %}
 
-        {% if precautions_text and optimized_category %}
-        <h3>{{ optimized_category | capitalize | escape }} Alırken Dikkat Edilmesi Gerekenler</h3>
+        {% if precautions_text %}
+        <h3>Dikkat Edilmesi Gerekenler</h3>
         <div class="precautions-section">
             <ul>
                 {% for precaution in precautions_text %}
-                <li>{{ precaution | escape }}</li>
+                {% for line in precaution.text.split('\n') %}
+                {% if line.strip() %}
+                <li>{{ line | escape }}</li>
+                {% endif %}
+                {% endfor %}
                 {% endfor %}
             </ul>
+            {% if gemini_response_list | selectattr('is_button') | list | length > 0 or precautions_text %}
+            <button class="play-btn" onclick="playOutputs()">Çıktıları Seslendir</button>
+            {% endif %}
+            <audio id="audio-player" class="audio-player" controls style="display: none;"></audio>
         </div>
         {% endif %}
 
@@ -366,12 +639,9 @@
         <button class="toggle-btn" onclick="toggleSidebar('youtubeSidebar')">YouTube Videolarını Göster</button>
         <div id="youtubeSidebar" class="sidebar">
             <span class="close-btn" onclick="toggleSidebar('youtubeSidebar')">&times;</span>
-            <h3>YouTube'da En Çok İzlenen Videolar</h3>
-            {% if search_query %}
-            <p><strong>Aranan Kelimeler:</strong> {{ search_query | escape }}</p>
-            {% endif %}
+            <h3>YouTube Videoları</h3>
             {% for video_group in youtube_videos %}
-            <h4>{{ video_group.site | escape }} Videolar</h4>
+            <h4>Arama: {{ video_group.search_term | escape }}</h4>
             {% for video in video_group.videos %}
             <div class="video-item">
                 <img src="{{ video.thumbnail }}" alt="{{ video.title | escape }}">
@@ -384,15 +654,13 @@
         {% endif %}
 
         {% if precautions_videos %}
-        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını Göster</button>
+        <button class="toggle-btn" onclick="toggleSidebar('precautionsSidebar')">Dikkat Edilmesi Gerekenler Videolarını
+            Göster</button>
         <div id="precautionsSidebar" class="sidebar">
             <span class="close-btn" onclick="toggleSidebar('precautionsSidebar')">&times;</span>
             <h3>Dikkat Edilmesi Gerekenler Videoları</h3>
-            {% if precautions_search_query %}
-            <p><strong>Aranan Kelimeler:</strong> {{ precautions_search_query | escape }}</p>
-            {% endif %}
             {% for video_group in precautions_videos %}
-            <h4>{{ video_group.site | escape }} Videolar</h4>
+            <h4>Arama: {{ video_group.search_term | escape }}</h4>
             {% for video in video_group.videos %}
             <div class="video-item">
                 <img src="{{ video.thumbnail }}" alt="{{ video.title | escape }}">
@@ -402,11 +670,12 @@
             {% endfor %}
             {% endfor %}
         </div>
-        {% elif search_query %}
+        {% elif results %}
         <div class="error-message">
-            <p>Bu ürün için dikkat edilmesi gerekenler videosu bulunamadı.</p>
+            <p>Bu ürün için YouTube videosu bulunamadı.</p>
         </div>
         {% endif %}
     </div>
 </body>
+
 </html>
