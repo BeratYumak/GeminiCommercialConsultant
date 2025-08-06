@@ -12,17 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def scrape_trendyol(product_name):
-    """Trendyol'dan ilk ürünün verilerini ve 10 yorumu çeker."""
-    data = {
-        "site": "Trendyol",
-        "title": "Bulunamadı",
-        "link": "",
-        "price": "N/A",
-        "rating": "N/A",
-        "comments": "N/A",
-        "image": "",
-        "user_comments": []
-    }
+    """Trendyol'dan ilk 5 ürünün verilerini çeker."""
+    products = []
     
     # Chrome ayarları
     options = webdriver.ChromeOptions()
@@ -41,99 +32,131 @@ def scrape_trendyol(product_name):
         driver.get(url)
         
         # Arama sonuçlarının yüklenmesini bekle
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-wrppr")))
+        WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.p-card-wrppr")))
         logger.info("Trendyol: Arama sonuçları yüklendi")
         
-        # İlk ürünü seç ve ürün sayfasına git
-        product = driver.find_element(By.CSS_SELECTOR, "div.p-card-wrppr")
-        product_link = product.find_element(By.CSS_SELECTOR, "a").get_attribute("href")
-        data["link"] = product_link
-        # Yorumlar sayfasına yönlendir
-        comments_url = f"{product_link}/yorumlar"
-        logger.info(f"Trendyol: Yorumlar sayfasına gidiliyor: {comments_url}")
-        driver.get(comments_url)
-        
-        # Ürün sayfası yüklenmesini sağla
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        time.sleep(3)  # Dinamik içeriklerin yüklenmesi için
-        
-        # Verileri çek
-        try:
-            title_element = driver.find_element(By.CSS_SELECTOR, "div.product-details-product-details-container .product-title")
-            data["title"] = title_element.text.strip()
-            logger.info(f"Trendyol: Başlık bulundu: {data['title']}")
-        except:
-            logger.warning("Trendyol: Başlık bulunamadı")
+        # İlk 5 ürünün bağlantılarını topla
+        product_elements = driver.find_elements(By.CSS_SELECTOR, "div.p-card-wrppr")[:5]
+        product_links = []
+        for product in product_elements:
             try:
-                data["title"] = driver.execute_script("return document.querySelector('div.product-details-product-details-container .product-title').innerText").strip()
-                logger.info(f"Trendyol: Başlık JavaScript ile bulundu: {data['title']}")
+                link = product.find_element(By.CSS_SELECTOR, "a").get_attribute("href")
+                product_links.append(link)
+                logger.info(f"Trendyol: Bağlantı toplandı: {link}")
             except:
-                logger.warning("Trendyol: JavaScript ile başlık bulunamadı")
+                logger.warning("Trendyol: Ürün bağlantısı alınamadı")
+                continue
         
-        try:
-            # Fiyat için önce price-view-original, sonra campaign-price denensin
-            try:
-                price_element = driver.find_element(By.CSS_SELECTOR, "span.price-view-original")
-                data["price"] = price_element.text.strip()
-                logger.info(f"Trendyol: Fiyat bulundu (price-view-original): {data['price']}")
-            except:
-                price_element = driver.find_element(By.CSS_SELECTOR, "span.campaign-price")
-                data["price"] = price_element.text.strip()
-                logger.info(f"Trendyol: Fiyat bulundu (campaign-price): {data['price']}")
-        except:
-            logger.warning("Trendyol: Fiyat bulunamadı")
-            try:
-                price = driver.execute_script(
-                    "return document.querySelector('span.price-view-original')?.innerText || "
-                    "document.querySelector('span.campaign-price')?.innerText"
-                )
-                if price:
-                    data["price"] = price.strip()
-                    logger.info(f"Trendyol: Fiyat JavaScript ile bulundu: {data['price']}")
-                else:
-                    logger.warning("Trendyol: JavaScript ile fiyat bulunamadı")
-            except:
-                logger.warning("Trendyol: JavaScript ile fiyat bulunamadı")
+        logger.info(f"Trendyol: {len(product_links)} ürün bulundu")
         
-        try:
-            data["rating"] = driver.find_element(By.CSS_SELECTOR, "span.reviews-summary-average-rating").text.strip()
-            logger.info(f"Trendyol: Puan bulundu: {data['rating']}")
-        except:
-            logger.warning("Trendyol: Puan bulunamadı")
+        # Her ürün için verileri çek
+        for index, product_link in enumerate(product_links, 1):
+            data = {
+                "site": "Trendyol",
+                "title": "Bulunamadı",
+                "link": product_link,
+                "price": "N/A",
+                "rating": "N/A",
+                "comments": "N/A",
+                "image": "",
+                "user_comments": []
+            }
+            
             try:
-                data["rating"] = driver.execute_script("return document.querySelector('span.reviews-summary-average-rating').innerText").strip()
-                logger.info(f"Trendyol: Puan JavaScript ile bulundu: {data['rating']}")
-            except:
-                logger.warning("Trendyol: JavaScript ile puan bulunamadı")
+                # Ürün sayfasına git
+                logger.info(f"Trendyol: Ürün {index}: Ürün detay sayfasına gidiliyor: {product_link}")
+                driver.get(product_link)
+                WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                time.sleep(3)  # Dinamik içeriklerin yüklenmesi için
+                
+                # Başlık
+                try:
+                    title_element = driver.find_element(By.CSS_SELECTOR, "div.product-details-product-details-container .product-title")
+                    data["title"] = title_element.text.strip()
+                    logger.info(f"Trendyol: Ürün {index}: Başlık bulundu: {data['title']}")
+                except:
+                    logger.warning(f"Trendyol: Ürün {index}: Başlık bulunamadı")
+                    try:
+                        data["title"] = driver.execute_script("return document.querySelector('div.product-details-product-details-container .product-title').innerText").strip()
+                        logger.info(f"Trendyol: Ürün {index}: Başlık JavaScript ile bulundu: {data['title']}")
+                    except:
+                        logger.warning(f"Trendyol: Ürün {index}: JavaScript ile başlık bulunamadı")
+                
+                # Fiyat
+                try:
+                    price_element = driver.find_element(By.CSS_SELECTOR, "div.product-details-product-details-container .discounted")
+                    data["price"] = price_element.text.strip()
+                    logger.info(f"Trendyol: Ürün {index}: Fiyat bulundu: {data['price']}")
+                except:
+                    logger.warning(f"Trendyol: Ürün {index}: Fiyat bulunamadı")
+                    try:
+                        price = driver.execute_script("return document.querySelector('div.product-details-product-details-container').innerText")
+                        if price:
+                            data["price"] = price.strip()
+                            logger.info(f"Trendyol: Ürün {index}: Fiyat JavaScript ile bulundu: {data['price']}")
+                        else:
+                            logger.warning(f"Trendyol: Ürün {index}: JavaScript ile fiyat bulunamadı")
+                    except:
+                        logger.warning(f"Trendyol: Ürün {index}: JavaScript ile fiyat bulunamadı")
+                
+                # Puan
+                try:
+                    data["rating"] = driver.find_element(By.CSS_SELECTOR, "span.reviews-summary-average-rating").text.strip()
+                    logger.info(f"Trendyol: Ürün {index}: Puan bulundu: {data['rating']}")
+                except:
+                    logger.warning(f"Trendyol: Ürün {index}: Puan bulunamadı")
+                    try:
+                        data["rating"] = driver.execute_script("return document.querySelector('span.reviews-summary-average-rating').innerText").strip()
+                        logger.info(f"Trendyol: Ürün {index}: Puan JavaScript ile bulundu: {data['rating']}")
+                    except:
+                        logger.warning(f"Trendyol: Ürün {index}: JavaScript ile puan bulunamadı")
+                
+                # Değerlendirme sayısı
+                try:
+                    comments_element = driver.find_element(By.CSS_SELECTOR, "div.product-details-product-details-container .reviews-summary-reviews-detail")
+                    data["comments"] = comments_element.text.strip().split()[0] 
+                    logger.info(f"Trendyol: Ürün {index}: Değerlendirme sayısı bulundu: {data['comments']}")
+                except:
+                    logger.warning(f"Trendyol: Ürün {index}: Değerlendirme sayısı bulunamadı")
+                    try:
+                        comments = driver.execute_script("return document.querySelector('div.pr-rnr-sm-p span').innerText").strip().split()[0]
+                        data["comments"] = comments
+                        logger.info(f"Trendyol: Ürün {index}: Değerlendirme sayısı JavaScript ile bulundu: {data['comments']}")
+                    except:
+                        logger.warning(f"Trendyol: Ürün {index}: JavaScript ile değerlendirme sayısı bulunamadı")
+                        data["comments"] = "N/A"
+                
+                # Resim
+                try:
+                    data["image"] = driver.find_element(By.CSS_SELECTOR, "img._carouselImage_abb7111").get_attribute("src")
+                    logger.info(f"Trendyol: Ürün {index}: Resim bulundu: {data['image']}")
+                except:
+                    logger.warning(f"Trendyol: Ürün {index}: Resim bulunamadı")
+                    try:
+                        data["image"] = driver.execute_script("return document.querySelector('img._carouselImage_abb7111').src").strip()
+                        logger.info(f"Trendyol: Ürün {index}: Resim JavaScript ile bulundu: {data['image']}")
+                    except:
+                        logger.warning(f"Trendyol: Ürün {index}: JavaScript ile resim bulunamadı")
+                
+                products.append(data)
+            
+            except Exception as e:
+                logger.error(f"Trendyol: Ürün {index} hatası: {e}")
+                products.append(data)
         
-        try:
-            comments_element = driver.find_element(By.CSS_SELECTOR, "div.reviews-summary-reviews-summary [data-testid='review-info-link']")
-            data["comments"] = comments_element.text.strip()
-            logger.info(f"Trendyol: Yorum sayısı bulundu: {data['comments']}")
-        except:
-            try:
-                driver.find_element(By.CSS_SELECTOR, "div.reviews-summary-no-reviews")
-                data["comments"] = "Henüz değerlendirilmedi"
-                logger.info("Trendyol: Ürün henüz değerlendirilmedi")
-            except:
-                logger.warning("Trendyol: Yorum sayısı bulunamadı")
-        
-        try:
-            data["image"] = driver.find_element(By.CSS_SELECTOR, "img._carouselImage_abb7111").get_attribute("src")
-            logger.info(f"Trendyol: Resim bulundu: {data['image']}")
-        except:
-            logger.warning("Trendyol: Resim bulunamadı")
-            try:
-                data["image"] = driver.execute_script("return document.querySelector('img._carouselImage_abb7111').src").strip()
-                logger.info(f"Trendyol: Resim JavaScript ile bulundu: {data['image']}")
-            except:
-                logger.warning("Trendyol: JavaScript ile resim bulunamadı")
-    
     except Exception as e:
         logger.error(f"Trendyol hatası: {e}")
-        data["title"] = "Hata"
-        data["link"] = f"Trendyol için hata: {str(e)}"
+        products.append({
+            "site": "Trendyol",
+            "title": "Hata",
+            "link": f"Trendyol için hata: {str(e)}",
+            "price": "N/A",
+            "rating": "N/A",
+            "comments": "N/A",
+            "image": "",
+            "user_comments": []
+        })
     
     finally:
         driver.quit()
-    return data
+    return products
