@@ -9,6 +9,7 @@
 
 ## Özellikler
 - **Çoklu Platform Desteği**: Trendyol ve Hepsiburada’dan aynı anda ürün tarama.
+- **Sesli Bildirim**: Gemini tarafından yapılan yorumların çıktısı sesli olarak alınabiliyor.
 - **Ürün Karşılaştırma**:
   - İlk 5 ürünü yan yana listeleme (Trendyol ve Hepsiburada için ayrı ayrı).
   - Fiyat, puan, yorum sayısı ve ürün görselleri gösterimi.
