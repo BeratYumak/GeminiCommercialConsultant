@@ -86,15 +86,24 @@ YouTube Önerileri: Ürünle ilgili videolar (örneğin, “iPhone 13 Modelleri 
 
 DOSYA YAPISI:
 
-urun-arama-asistani/
+GeminiCommercialConsultant/
+
 ├── app.py                    # Flask uygulaması, ana endpoint
+
 ├── scraper_trendyol.py       # Trendyol scraper’ı
+
 ├── scraper_hepsiburada.py    # Hepsiburada scraper’ı
+
 ├── scraper_youtube.py        # YouTube video scraper’ı
+
 ├── templates/
 │   └── index.html            # Frontend HTML şablonu
+
 ├── static/
 │   └── audio/                # Ses dosyaları için (isteğe bağlı)
+
 ├── requirements.txt          # Bağımlılıklar
+
 ├── gemini_cevaplar.txt       # Log dosyası
+
 └── README.md                 # Bu dosya
