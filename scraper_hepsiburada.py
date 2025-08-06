@@ -3,159 +3,239 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 import logging
+import re
+import time
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def clean_price(text):
+    """Fiyat metnini temizler, sadece sayısal fiyat ve para birimini döner."""
+    try:
+        match = re.search(r'(\d{1,3}(?:\.\d{3})*,\d+\s?TL)', text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return text.strip() if text else "N/A"
+    except Exception as e:
+        logger.warning(f"Fiyat temizleme hatası: {str(e)}")
+        return "N/A"
+
+def clean_comments(text):
+    """<b> etiketinden değerlendirme sayısını çeker."""
+    try:
+        match = re.search(r'(\d+)', text)  # Herhangi bir sayı çek
+        if match:
+            return match.group(1).strip()
+        return "0"
+    except Exception as e:
+        logger.warning(f"Değerlendirme sayısı temizleme hatası: {str(e)} - Metin: {text}")
+        return "0"
+
 def scrape_hepsiburada(product_name):
-    data = {
-        "site": "Hepsiburada",
-        "title": "Bulunamadı",
-        "link": "",
-        "price": "Bilinmiyor",
-        "rating": "Bilinmiyor",
-        "comments": "Bilinmiyor",
-        "image": "",
-        "user_comments": []
-    }
+    """Hepsiburada'dan ilk 5 geçerli ürünü çeker, adservice içeren linkleri atlar."""
+    data = []  # Tek bir sözlük yerine ürün listesi
+    
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")  # Yeni headless mod, pencere açmaz
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+    options.add_argument("--headless=new")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-gpu")
-    options.add_argument("--ignore-certificate-errors")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-
+    
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.set_page_load_timeout(30)
+    
     try:
-        url = f"https://www.hepsiburada.com/ara?q={product_name.replace(' ', '+')}"
+        # Arama sayfasını ziyaret et
+        url = f"https://www.hepsiburada.com/ara?q={product_name.replace(' ', '%20')}"
         logger.info(f"Hepsiburada: Arama yapılıyor {url}")
         driver.get(url)
-        # Arama sayfasının yüklendiğini doğrula
+        
+        # Arama sonuçlarının yüklenmesini bekle
         try:
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[class*='productListContent-']"))
+            WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "article.productCard-module_article__HJ97o"))
             )
-            logger.info("Hepsiburada: Arama sayfası yüklendi")
-        except Exception as e:
-            logger.error(f"Hepsiburada: Arama sayfası yüklenemedi: {e}")
-            data["title"] = "Hata"
-            data["link"] = f"Arama sayfası yüklenemedi: {str(e)}"
-            logger.info(f"Sayfa kaynağı: {driver.page_source[:500]}")
-            driver.save_screenshot("hepsiburada_error.png")
-            return data
-
-        # İlk ürünü seç ve ürün sayfasına git
-        try:
-            products = driver.find_elements(By.CSS_SELECTOR, "div[class*='productListContent-']")
-            product_link = None
-            for product in products:
-                try:
-                    link = product.find_element(By.CSS_SELECTOR, "article[class*='productCard-module_article__'] a").get_attribute("href")
-                    if "adservice" not in link:
-                        product_link = link
-                        break
-                except:
-                    continue
-            if not product_link:
-                raise Exception("Geçerli ürün linki bulunamadı")
-            data["link"] = product_link
-            logger.info(f"Hepsiburada: Ürün sayfasına gidiliyor {product_link}")
-            driver.get(product_link)
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)
-        except Exception as e:
-            logger.error(f"Hepsiburada: Ürün sayfasına gidilemedi: {e}")
-            data["title"] = "Hata"
-            data["link"] = f"Ürün sayfasına gidilemedi: {str(e)}"
-            driver.save_screenshot("hepsiburada_product_error.png")
-            return data
-
-        # Başlık
+            logger.info("Hepsiburada: Arama sayfası yüklendi")
+        except TimeoutException:
+            logger.error("Hepsiburada: Arama sonuçları yüklenemedi, sayfa içeriği kontrol ediliyor")
+            if "Aradığınız kriterlere uygun ürün bulunamadı" in driver.page_source:
+                logger.warning(f"Hepsiburada: '{product_name}' için ürün bulunamadı")
+                data.append({
+                    "site": "Hepsiburada",
+                    "title": "Hata",
+                    "link": f"Hepsiburada: '{product_name}' için ürün bulunamadı",
+                    "price": "N/A",
+                    "rating": "N/A",
+                    "comments": "0",
+                    "image": "",
+                    "user_comments": []
+                })
+                with open("hepsiburada_error_page.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
+                driver.save_screenshot("hepsiburada_error.png")
+                return data
+            raise TimeoutException("Hepsiburada: Arama sonuçları yüklenemedi")
+        
+        # İlk 5 geçerli ürünü seç (adservice içermeyen)
         try:
-            title_element = driver.find_element(By.CSS_SELECTOR, "div.container.desktop [data-test-id='title-area'], h1#product-name, h1.product-name, span.product-name, h1.title")
-            data["title"] = title_element.text.strip()
-            logger.info(f"Hepsiburada: Başlık bulundu: {data['title']}")
-        except:
-            logger.warning("Hepsiburada: Başlık bulunamadı")
-            data["title"] = "Bulunamadı"
-
-        # Fiyat
-        try:
-            price = driver.find_element(By.CSS_SELECTOR, "[data-test-id='price'], span#offering-price, span.price-value, span.product-price, span.current-price, span.price").text.strip()
-            data["price"] = price
-            logger.info(f"Hepsiburada: Fiyat bulundu: {price}")
-        except:
-            logger.warning("Hepsiburada: Fiyat bulunamadı")
-
-        # Puan ve Yorum Sayısı
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='has-review'], span[class*='rating'], div[class*='rating'], span[class*='review']"))
-            )
-            review_element = driver.find_element(By.CSS_SELECTOR, "[data-test-id='has-review'], span[class*='rating'], div[class*='rating'], span[class*='review']")
-            review_text = review_element.text.strip()
-            # Puan ve yorum sayısı genellikle "3,5(24)" veya "3,5 24 Değerlendirme" formatında
-            rating = "Bilinmiyor"
-            comments = "Bilinmiyor"
-            if '(' in review_text and ')' in review_text:
-                rating = review_text.split('(')[0].strip().replace(',', '.')
-                comments = review_text.split('(')[1].replace(')', '').strip()
-            elif 'Değerlendirme' in review_text:
-                parts = review_text.split()
-                rating = parts[0].replace(',', '.')
-                for part in parts:
-                    if part.isdigit():
-                        comments = part
-                        break
-            data["rating"] = rating
-            data["comments"] = comments
-            logger.info(f"Hepsiburada: Puan bulundu: {rating}, Yorum sayısı bulundu: {comments}")
-        except:
-            logger.warning("Hepsiburada: Puan ve yorum sayısı bulunamadı")
-            data["rating"] = "Bilinmiyor"
-            data["comments"] = "Bilinmiyor"
-
-        # Resim
-                # Resim
-        try:
-            images = driver.find_elements(By.CSS_SELECTOR, "div.hb-image-view img, div[class*='imageArea-module_imageLeftBottomArea__'] img, img#productImage, img.product-image, img.main-img")
-            image_url = ""
-            for img in images:
-                src = img.get_attribute("src") or ""
-                if not src:
-                    continue
-                # Fotoğraf boyutunu kontrol et
+            products = driver.find_elements(By.CSS_SELECTOR, "article.productCard-module_article__HJ97o a")
+            if not products:
+                logger.warning(f"Hepsiburada: '{product_name}' için ürün bulunamadı")
+                data.append({
+                    "site": "Hepsiburada",
+                    "title": "Hata",
+                    "link": f"Hepsiburada: '{product_name}' için ürün bulunamadı",
+                    "price": "N/A",
+                    "rating": "N/A",
+                    "comments": "0",
+                    "image": "",
+                    "user_comments": []
+                })
+                with open("hepsiburada_no_product.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
+                driver.save_screenshot("hepsiburada_no_product.png")
+                return data
+            
+            valid_products = []
+            for product in products[:5]:  # İlk 5 ürünü al
                 try:
-                    width = int(img.get_attribute("width") or img.size.get("width", 0))
-                    height = int(img.get_attribute("height") or img.size.get("height", 0))
-                    if width <= 600 and height <= 600:
-                        image_url = src
-                        break
+                    link = product.get_attribute("href")
+                    if link and "hepsiburada.com" in link and not any(x in link for x in ["adservice", "sponsored", "magaza", "kampanya", "satici"]):
+                        valid_products.append(link)
                 except:
-                    # Boyut bilgisi alınamazsa, bu görseli kullan
-                    image_url = src
-                    break
-            if not image_url and images:
-                image_url = images[0].get_attribute("src") or ""  # Fallback: İlk resmi al
-            data["image"] = image_url
-            logger.info(f"Hepsiburada: Resim bulundu: {data['image']}")
-        except:
-            logger.warning("Hepsiburada: Resim bulunamadı")
-            data["image"] = ""
-
-    except Exception as e:
-        logger.error(f"Hepsiburada genel hata: {e}")
-        data["title"] = "Hata"
-        data["link"] = f"Hepsiburada arama hatası: {str(e)}"
-        driver.save_screenshot("hepsiburada_general_error.png")
+                    continue
+            
+            if not valid_products:
+                logger.warning(f"Hepsiburada: Geçerli 5 ürün linki bulunamadı")
+                data.append({
+                    "site": "Hepsiburada",
+                    "title": "Hata",
+                    "link": "Hepsiburada: Geçerli 5 ürün linki bulunamadı",
+                    "price": "N/A",
+                    "rating": "N/A",
+                    "comments": "0",
+                    "image": "",
+                    "user_comments": []
+                })
+                with open("hepsiburada_no_product.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
+                driver.save_screenshot("hepsiburada_no_product.png")
+                return data
+            
+            # Her ürün için veri çek
+            for i, product_link in enumerate(valid_products[:5], 1):  # Maksimum 5 ürün
+                product_data = {
+                    "site": "Hepsiburada",
+                    "title": "Hata",
+                    "link": product_link,
+                    "price": "N/A",
+                    "rating": "N/A",
+                    "comments": "0",
+                    "image": "",
+                    "user_comments": []
+                }
+                
+                try:
+                    driver.get(product_link)
+                    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                    time.sleep(3)
+                    logger.info(f"Hepsiburada: Ürün {i} sayfası yüklendi: {product_link}")
+                    
+                    # Başlık
+                    try:
+                        title_element = driver.find_element(By.CSS_SELECTOR, "[data-test-id='title-area'], [data-test-id='title']")
+                        product_data["title"] = title_element.text.strip()
+                        logger.info(f"Hepsiburada: Ürün {i} - Başlık bulundu: {product_data['title']}")
+                    except NoSuchElementException:
+                        logger.warning(f"Hepsiburada: Ürün {i} - Başlık bulunamadı")
+                        try:
+                            product_data["title"] = driver.execute_script("return document.querySelector('[data-test-id=\"title-area\"], [data-test-id=\"title\"]').innerText").strip()
+                            logger.info(f"Hepsiburada: Ürün {i} - Başlık JavaScript ile bulundu: {product_data['title']}")
+                        except:
+                            logger.warning(f"Hepsiburada: Ürün {i} - JavaScript ile başlık bulunamadı")
+                    
+                    # Fiyat
+                    try:
+                        price_element = driver.find_element(By.CSS_SELECTOR, "[data-test-id='price'], [data-test-id='default-price'], span.foQSHpIYwZWy8nHeqapl.QfKHfu57dLi9hPNDl1UL, span.PO95DoKzLwH3oI6s8acH, span.IMDzXKdZKh810YOI6k5Q, span.z7kokklsVwh0K5zFWjIO")
+                        product_data["price"] = clean_price(price_element.text)
+                        logger.info(f"Hepsiburada: Ürün {i} - Fiyat bulundu: {product_data['price']}")
+                    except NoSuchElementException:
+                        logger.warning(f"Hepsiburada: Ürün {i} - Fiyat bulunamadı")
+                        try:
+                            product_data["price"] = clean_price(driver.execute_script("return document.querySelector('[data-test-id=\"price\"], [data-test-id=\"default-price\"]').innerText").strip())
+                            logger.info(f"Hepsiburada: Ürün {i} - Fiyat JavaScript ile bulundu: {product_data['price']}")
+                        except:
+                            logger.warning(f"Hepsiburada: Ürün {i} - JavaScript ile fiyat bulunamadı")
+                    
+                    # Puan
+                    try:
+                        rating_element = driver.find_element(By.CSS_SELECTOR, "span.JYHIcZ8Z_Gz7VXzxFB96, span.rating-score")
+                        product_data["rating"] = rating_element.text.strip()
+                        logger.info(f"Hepsiburada: Ürün {i} - Puan bulundu: {product_data['rating']}")
+                    except NoSuchElementException:
+                        product_data["rating"] = "Henüz puanlanmadı"
+                        logger.warning(f"Hepsiburada: Ürün {i} - Puan bulunamadı")
+                    
+                    # Değerlendirme sayısı
+                    try:
+                        comments_element = driver.find_element(By.CSS_SELECTOR, "a.yPPu6UogPlaotjhx1Qki > b")
+                        product_data["comments"] = clean_comments(comments_element.text)
+                        logger.info(f"Hepsiburada: Ürün {i} - Değerlendirme sayısı bulundu: {product_data['comments']} - Element metni: {comments_element.text}")
+                    except NoSuchElementException:
+                        product_data["comments"] = "0"
+                        logger.warning(f"Hepsiburada: Ürün {i} - Değerlendirme sayısı bulunamadı")
+                    
+                    # Resim
+                    try:
+                        image_element = driver.find_element(By.CSS_SELECTOR, "img.i9jTSpEeoI29_M1mOKct.hb-HbImage-view__image, img.product-image")
+                        product_data["image"] = image_element.get_attribute("src")
+                        logger.info(f"Hepsiburada: Ürün {i} - Resim bulundu: {product_data['image']}")
+                    except NoSuchElementException:
+                        logger.warning(f"Hepsiburada: Ürün {i} - Resim bulunamadı")
+                    
+                    data.append(product_data)
+                
+                except Exception as e:
+                    logger.error(f"Hepsiburada: Ürün {i} için hata: {str(e)}")
+                    product_data["link"] = f"Hepsiburada için hata: {str(e)}"
+                    with open(f"hepsiburada_product_{i}_error.html", "w", encoding="utf-8") as f:
+                        f.write(driver.page_source)
+                    driver.save_screenshot(f"hepsiburada_product_{i}_error.png")
+                    data.append(product_data)
+        
+        except Exception as e:
+            logger.error(f"Hepsiburada: Genel hata: {str(e)}")
+            data.append({
+                "site": "Hepsiburada",
+                "title": "Hata",
+                "link": f"Hepsiburada için hata: {str(e)}",
+                "price": "N/A",
+                "rating": "N/A",
+                "comments": "0",
+                "image": "",
+                "user_comments": []
+            })
+            with open("hepsiburada_general_error.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+            driver.save_screenshot("hepsiburada_general_error.png")
+    
     finally:
-        driver.quit()
+        try:
+            driver.quit()
+        except:
+            logger.warning("Hepsiburada: Tarayıcı kapatılamadı")
+    
     return data
+
+if __name__ == "__main__":
+    result = scrape_hepsiburada("iphone 13")
+    for i, product in enumerate(result, 1):
+        print(f"Ürün {i}: {product}")
