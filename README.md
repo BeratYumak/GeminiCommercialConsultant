@@ -59,9 +59,9 @@ Projenizi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyi
 
 
 
-Kullanım
+## Kullanım
 
-Arama Yapma:
+**Arama Yapma:**
 
 http://localhost:5000 adresine gidin.
 Arama çubuğuna bir ürün adı yazın (örneğin, “iPhone 13” veya “halhal”).
