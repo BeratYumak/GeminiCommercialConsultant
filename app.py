@@ -21,8 +21,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-YOUTUBE_API_KEY = "AIzaSyBc6CuoZ0gjYG6FtDrA2MVM1GoAyc4Hjgw" 
-GENAI_API_KEY = "AIzaSyB7ZvG_Fx5sOwIkEK2wkMajXEbTuwH5S5Y"
+#FIXIT
+YOUTUBE_API_KEY = "CHANGEHERE" 
+GENAI_API_KEY = "CHANGEHERE"
 
 def optimize_title_with_gemini(title, product_category=None):
     try:
